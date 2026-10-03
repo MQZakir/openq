@@ -4,10 +4,10 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: openq
-      POSTGRES_PASSWORD: OpenQ123!
+      POSTGRES_PASSWORD: openq
       POSTGRES_DB: openq
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - openq_db_data:/var/lib/postgresql/data
 

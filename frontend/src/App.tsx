@@ -1,59 +1,75 @@
 import { useEffect, useState } from "react";
 
-function App() {
-  const [error, setError] = useState("");
-  const [name, setName] = useState("");
-  const [age, setAge] = useState("");
-  const [city, setCity] = useState("");
-  const [result, setResult] = useState("");
+type Queue = {
+  id: number;
+  name: string;
+  avg_service_minutes: number;
+  status: string;
+  public_slug: string; 
+}
 
-  const GreetRequest = async () => {
-    setError("");
-    setResult("");
-    try {
-      const response = await fetch("http://localhost:8000/greet", {
-        method: "POST",
-        headers: { "Content-Type" : "application/json" },
-        body: JSON.stringify({ name, age: Number(age), city }),
-      });
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      setResult(data.message);
-    } catch (err) {
-      setError("Failed to fetch greeting. Please try again.");
-    }
+function App() {
+  const [queues, setQueues] = useState<Queue[]>([]);
+  const [name, setName] = useState("");
+  const [avgTime, setAvgTime] = useState("15");
+
+  const loadQueues = async () => {
+    const res = await fetch("http://localhost:8000/queues");
+    const data = await res.json();
+    setQueues(data);
+  }
+
+  useEffect(() => {
+    loadQueues();
+  }, []);
+
+  const createQueue = async () => {
+    if (!name.trim()) return;
+    await fetch("http://localhost:8000/queues", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name: name,
+        avg_service_minutes: Number(avgTime),
+      }),
+    });
+    setName("");
+    setAvgTime("15");
+    loadQueues();
   };
 
   return (
-    <div style={{ padding: 40, fontFamily: "Arial, sans-serif", maxWidth: 600, margin: "0 auto" }}>
+    <div style={{ padding: 40, fontFamily: "sans-serif", maxWidth: 600 }}>
       <h1>OpenQ</h1>
-      <p>Backend status: {status}</p>
-      <p>Try sending input to backend</p>
-      <div>
+
+      <h2>Create a queue</h2>
+      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
         <input
-          placeholder="Name"
+          placeholder="Queue name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          style={{ marginRight: 10 }}
         />
         <input
-          placeholder="Age"
-          value={age}
-          onChange={(e) => setAge(e.target.value)}
-          style={{ marginRight: 10 }}
+          placeholder="Avg minutes"
+          value={avgTime}
+          onChange={(e) => setAvgTime(e.target.value)}
+          style={{ width: 100 }}
         />
-        <input
-          placeholder="City"
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          style={{ marginRight: 10 }}
-        />
-        <button onClick={GreetRequest}>Send</button>
+        <button onClick={createQueue}>Create</button>
       </div>
-      {result && <p>Result: {result}</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      <h2>Your queues</h2>
+      {queues.length === 0 && <p>No queues yet.</p>}
+      <ul>
+        {queues.map((q) => (
+          <li key={q.id}>
+            <strong>{q.name}</strong> — {q.avg_service_minutes} min —{" "}
+            <code>{q.public_slug}</code>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

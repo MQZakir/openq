@@ -1,0 +1,8 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+
+DB_URL = "postgresql+psycopg2://openq:openq@localhost:5433/openq"
+
+engine = create_engine(DB_URL)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+Base = declarative_base()
